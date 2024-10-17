@@ -56,10 +56,16 @@ func postHandler(c *fiber.Ctx, db *sql.DB) error {
 }
 
 func putHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello")
+	olditem := c.Query("olditem")
+	newitem := c.Query("newitem")
+	// replace old name with new one
+	db.Exec("UPDATE todos SET item = $1 WHERE item = $2", newitem, olditem)
+	return c.Redirect("/")
 }
 func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello")
+	todoToDelete := c.Query("item")
+	db.Exec("DELETE from todos WHERE item=$1", todoToDelete)
+	return c.SendString("Deleted")
 }
 
 func main() {
