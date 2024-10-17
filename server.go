@@ -1,5 +1,3 @@
-//connStr := "host=localhost user=postgres password=246Trin!trotoluene dbname=todo sslmode=disable"
-
 package main
 
 import (
@@ -8,9 +6,15 @@ import (
 	"log"
 	"os"
 
+
+	"github.com/gofiber/template/html/v2"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
 )
+
+type todo struct {
+	Item string
+}
 
 // handlers accept fiber context object and pointer to DB connection
 func indexHandler(c *fiber.Ctx, db *sql.DB) error {
@@ -24,8 +28,8 @@ func indexHandler(c *fiber.Ctx, db *sql.DB) error {
 		log.Fatal(err)
 		c.JSON("An error occurred")
 	}
-	for rows.Next() { // iterate over rows 
-		rows.Scan(&res) // use scan() to assign current row to res
+	for rows.Next() { // iterate over rows
+		rows.Scan(&res)            // use scan() to assign current row to res
 		todos = append(todos, res) // append value of res to array
 	}
 
@@ -33,9 +37,24 @@ func indexHandler(c *fiber.Ctx, db *sql.DB) error {
 		"Todos": todos, // pass todos array to index view
 	})
 }
+
 func postHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello")
+	newTodo := todo{}
+	if err := c.BodyParser(&newTodo); err != nil {
+		log.Printf("An error occured: %v", err)
+		return c.SendString(err.Error())
+	}
+	fmt.Printf("%v", newTodo)
+	if newTodo.Item != "" {
+		_, err := db.Exec("INSERT into todos VALUES ($1)", newTodo.Item) // execute SQL query where we add new to-do item into DB
+		if err != nil {
+			log.Fatalf("An error occured while executing query: %v", err)
+		}
+	}
+ 
+	return c.Redirect("/") // redirect to home page
 }
+
 func putHandler(c *fiber.Ctx, db *sql.DB) error {
 	return c.SendString("Hello")
 }
@@ -44,6 +63,7 @@ func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
 }
 
 func main() {
+
 	connStr := "host=localhost user=postgres password=246Trin!trotoluene dbname=todo sslmode=disable"
 
 	// Connect to database
@@ -52,12 +72,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+
 	/* configure our Fiber app to serve our HTML views */
-	engine := html.New("./views",".html")
+	engine := html.New("./views", ".html")
+	
+
 	// create new Fiber object & assign to app variable
 	app := fiber.New(fiber.Config{
 		Views: engine,
-		}) 
+	})
+
+	app.Static("/", "./public")
 
 	// ROUTES
 	// + four handler methods that are called whenever someone visits those routes
