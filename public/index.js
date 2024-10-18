@@ -1,3 +1,4 @@
+// delete
 function removeFromDb(item){
     fetch(`/delete?item=${item}`, {method: "Delete"}).then(res =>{
         if (res.status == 200){
@@ -6,6 +7,7 @@ function removeFromDb(item){
     })
  }
  
+ // update database
  function updateDb(item) {
     let input = document.getElementById(item)
     let newitem = input.value
