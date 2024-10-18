@@ -69,8 +69,17 @@ func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
 }
 
 func main() {
+	err := godotenv.Load()
+    if err != nil {
+        log.Fatal("Error loading .env file")
+    }
 
-	connStr := "host=localhost user=postgres password=246Trin!trotoluene dbname=todo sslmode=disable"
+	dbPassword := os.Getenv("DB_PASSWORD")
+    if dbPassword == "" {
+        log.Fatal("DB_PASSWORD environment variable not set")
+    }
+
+	connStr := fmt.Sprintf("host=localhost user=postgres password=%s dbname=todo sslmode=disable", dbPassword)
 
 	// Connect to database
 	db, err := sql.Open("postgres", connStr)
